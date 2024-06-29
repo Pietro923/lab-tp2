@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>El mejor CRUD</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>El mejor CRUD</h1>
+    <form id="alumnoForm">
+        <input type="number" id="legajo" placeholder="Legajo"><br>
+        <input type="text" id="nombreCompleto" placeholder="Nombre Completo"><br>
+        <input type="text" id="dni" placeholder="DNI"><br>
+        <input type="text" id="telefono" placeholder="Telefono"><br>
+        <input type="email" id="email" placeholder="Email"><br>
+        <button type="button" onclick="agregarAlumno()">Agregar Alumno</button>
+        <button type="button" onclick="modificarAlumno()">Modificar Alumno</button>
+        <button type="button" onclick="borrarAlumno()">Borrar Alumno</button>
+        <button type="button" onclick="listarAlumnos()">Ver Alumnos</button>
+    </form>
+
+    <!-- Modal de visualización de detalles de alumno -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <pre id="viewOutput"></pre>
+        </div>
+    </div>
+
+    <table id="alumnosTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Legajo</th>
+                <th>Nombre Completo</th>
+                <th>DNI</th>
+                <th>Telefono</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody id="alumnosTableBody"></tbody>
+    </table>
+
+    <script>
+        function agregarAlumno() {
+            const data = {
+                Legajo: document.getElementById('legajo').value,
+                NombreCompleto: document.getElementById('nombreCompleto').value,
+                DNI: document.getElementById('dni').value,
+                Telefono: document.getElementById('telefono').value,
+                Email: document.getElementById('email').value
+            };
+            fetch('http://localhost/tp2/elmejorcrud.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+              .then(data => {
+                  
+                  listarAlumnos();
+              });
+        }
+
+        function modificarAlumno() {
+            const data = {
+                Legajo: document.getElementById('legajo').value,
+                NombreCompleto: document.getElementById('nombreCompleto').value,
+                DNI: document.getElementById('dni').value,
+                Telefono: document.getElementById('telefono').value,
+                Email: document.getElementById('email').value
+            };
+            fetch('http://localhost/tp2/elmejorcrud.php', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+              .then(data => {
+                  
+                  listarAlumnos();
+              });
+        }
+
+        function borrarAlumno() {
+            const data = {
+                Legajo: document.getElementById('legajo').value
+            };
+            fetch('http://localhost/tp2/elmejorcrud.php', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+              .then(data => {
+                  
+                  listarAlumnos();
+              });
+        }
+
+        function listarAlumnos() {
+            fetch('http://localhost/tp2/elmejorcrud.php')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('alumnosTable');
+                    const tbody = document.getElementById('alumnosTableBody');
+                    tbody.innerHTML = ''; // Limpiar contenido anterior
+
+                    data.forEach(alumno => {
+                        const row = document.createElement('tr');
+                        row.addEventListener('click', () => openViewModal(alumno));
+
+                        const legajoCell = document.createElement('td');
+                        legajoCell.textContent = alumno.Legajo;
+                        row.appendChild(legajoCell);
+
+                        const nombreCell = document.createElement('td');
+                        nombreCell.textContent = alumno.NombreCompleto;
+                        row.appendChild(nombreCell);
+
+                        const dniCell = document.createElement('td');
+                        dniCell.textContent = alumno.DNI;
+                        row.appendChild(dniCell);
+
+                        const telefonoCell = document.createElement('td');
+                        telefonoCell.textContent = alumno.Telefono;
+                        row.appendChild(telefonoCell);
+
+                        const emailCell = document.createElement('td');
+                        emailCell.textContent = alumno.Email;
+                        row.appendChild(emailCell);
+
+                        tbody.appendChild(row);
+                    });
+
+                    table.style.display = 'table'; // Mostrar la tabla
+                });
+        }
+
+        
+        function openViewModal(data) {
+            const modal = document.getElementById('viewModal');
+            const output = document.getElementById('viewOutput');
+            output.textContent = JSON.stringify(data, null, 2);
+            modal.style.display = 'block';
+        }
+
+       
+        function closeViewModal() {
+            const modal = document.getElementById('viewModal');
+            modal.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

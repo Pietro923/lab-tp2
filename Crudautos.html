@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Autos</title>
+    <link rel="stylesheet" href="autitos.css">
+</head>
+<body>
+    <h1>Gestión de Autos</h1>
+    <button onclick="openMarcaModal()">Ingresar Marcas</button>
+
+    <form id="autoForm">
+        <input type="text" id="dominio" placeholder="Dominio"><br>
+        <select id="marca"></select><br>
+        <input type="text" id="modelo" placeholder="Modelo"><br>
+        <input type="number" id="anioFabricacion" placeholder="Año de Fabricación"><br>
+        <input type="number" id="kilometraje" placeholder="Kilometraje"><br>
+        <button type="button" onclick="agregarAuto()">Agregar Auto</button>
+        <button type="button" onclick="modificarAuto()">Modificar Auto</button>
+        <button type="button" onclick="borrarAuto()">Borrar Auto</button>
+        <button type="button" onclick="listarAutos()">Ver Autos</button>
+    </form>
+
+    <!-- Modal de Ingresar Marcas -->
+    <div id="marcaModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeMarcaModal()">&times;</span>
+            <input type="text" id="nombreMarca" placeholder="Nombre de la Marca"><br>
+            <button type="button" onclick="guardarMarca()">Guardar Marca</button>
+        </div>
+    </div>
+
+    <!-- Modal para visualizar detalles del auto -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <pre id="viewOutput"></pre>
+        </div>
+    </div>
+
+    <table id="autosTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Dominio</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Año</th>
+                <th>Kilometraje</th>
+            </tr>
+        </thead>
+        <tbody id="autosTableBody"></tbody>
+    </table>
+
+    <script>
+        function openMarcaModal() {
+            document.getElementById('marcaModal').style.display = 'block';
+        }
+
+        function closeMarcaModal() {
+            document.getElementById('marcaModal').style.display = 'none';
+        }
+
+        function guardarMarca() {
+            const nombreMarca = document.getElementById('nombreMarca').value;
+            fetch('http://localhost/tp2/marcas.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nombre: nombreMarca })
+            }).then(response => response.json())
+              .then(data => {
+                  closeMarcaModal();
+                  cargarMarcas();
+              });
+        }
+
+        function cargarMarcas() {
+            fetch('http://localhost/tp2/marcas.php')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('marca');
+                    select.innerHTML = '';
+                    data.forEach(marca => {
+                        const option = document.createElement('option');
+                        option.value = marca.nombre;
+                        option.textContent = marca.nombre;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        function agregarAuto() {
+            const data = {
+                dominio: document.getElementById('dominio').value,
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                anio_fabricacion: document.getElementById('anioFabricacion').value,
+                kilometraje: document.getElementById('kilometraje').value
+            };
+            fetch('http://localhost/tp2/crudautos.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+              .then(data => {
+                  listarAutos();
+              });
+        }
+
+        function modificarAuto() {
+    const data = {
+        dominio: document.getElementById('dominio').value,
+        marca: document.getElementById('marca').value,
+        modelo: document.getElementById('modelo').value,
+        anio_fabricacion: document.getElementById('anio_fabricacion').value,
+        kilometraje: document.getElementById('kilometraje').value
+    };
+    fetch('http://localhost/tp2/crudautos.php', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    }).then(response => response.json())
+      .then(data => {
+          listarAutos();
+      });
+}
+
+function borrarAuto() {
+    const data = {
+        dominio: document.getElementById('dominio').value
+    };
+    fetch('http://localhost/tp2/crudautos.php', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    }).then(response => response.json())
+      .then(data => {
+          listarAutos();
+      });
+}
+
+        function listarAutos() {
+            fetch('http://localhost/tp2/crudautos.php')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('autosTable');
+                    const tbody = document.getElementById('autosTableBody');
+                    tbody.innerHTML = '';
+                    data.forEach(auto => {
+                        const row = document.createElement('tr');
+                        row.addEventListener('click', () => openViewModal(auto));
+                        row.innerHTML = `
+                            <td>${auto.dominio}</td>
+                            <td>${auto.marca}</td>
+                            <td>${auto.modelo}</td>
+                            <td>${auto.anio_fabricacion}</td>
+                            <td>${auto.kilometraje}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    table.style.display = 'table';
+                });
+        }
+
+        function openViewModal(data) {
+            const modal = document.getElementById('viewModal');
+            const output = document.getElementById('viewOutput');
+            output.textContent = JSON.stringify(data, null, 2);
+            modal.style.display = 'block';
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').style.display = 'none';
+        }
+
+        window.onload = cargarMarcas;
+    </script>
+</body>
+</html>
